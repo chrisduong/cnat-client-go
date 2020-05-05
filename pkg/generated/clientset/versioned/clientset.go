@@ -21,10 +21,10 @@ package versioned
 import (
 	"fmt"
 
+	samplecontrollerv1alpha1 "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/typed/cnat/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
-	samplecontrollerv1alpha1 "k8s.io/sample-controller/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
 )
 
 type Interface interface {

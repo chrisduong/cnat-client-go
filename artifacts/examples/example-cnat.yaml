@@ -1,0 +1,7 @@
+apiVersion: cnat.programming-kubernetes.info/v1alpha1
+kind: At
+metadata:
+  name: example-cnat
+spec:
+  schedule: "2020-05-12T10:12:00Z"
+  command: "echo YAY"
