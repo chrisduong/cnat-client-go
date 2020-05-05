@@ -19,9 +19,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	v1alpha1 "github.com/chrisduong/cnat-go-client/pkg/apis/samplecontroller/v1alpha1"
+	"github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
-	v1alpha1 "k8s.io/sample-controller/pkg/apis/samplecontroller/v1alpha1"
-	"k8s.io/sample-controller/pkg/generated/clientset/versioned/scheme"
 )
 
 type SamplecontrollerV1alpha1Interface interface {

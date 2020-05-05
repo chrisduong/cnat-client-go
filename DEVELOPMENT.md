@@ -14,4 +14,12 @@ Download your dependencies
 go mod vendor
 ```
 
+### Rename
+
 Rename the folder the *pkg/apis/samplecontroller* to *pkg/apis/yourown*
+
+Rename *module* path to *github.com/chrisduong/cnat-client-go*
+
+## Verify
+
+Run `hack/verify-codegen.sh` to verify code changes.
