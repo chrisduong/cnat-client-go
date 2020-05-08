@@ -20,6 +20,7 @@ package fake
 
 import (
 	clientset "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned"
+	cnatv1alpha1 "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/typed/cnat/v1alpha1"
 	fakecnatv1alpha1 "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/typed/cnat/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -75,7 +76,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// cnatV1alpha1 retrieves the cnatV1alpha1Client
-func (c *Clientset) cnatV1alpha1() cnatv1alpha1.cnatV1alpha1Interface {
-	return &fakecnatv1alpha1.FakecnatV1alpha1{Fake: &c.Fake}
+// CnatV1alpha1 retrieves the CnatV1alpha1Client
+func (c *Clientset) CnatV1alpha1() cnatv1alpha1.CnatV1alpha1Interface {
+	return &fakecnatv1alpha1.FakeCnatV1alpha1{Fake: &c.Fake}
 }

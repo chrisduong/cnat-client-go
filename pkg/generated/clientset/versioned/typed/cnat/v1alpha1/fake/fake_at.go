@@ -32,7 +32,7 @@ import (
 
 // FakeAts implements AtInterface
 type FakeAts struct {
-	Fake *FakecnatV1alpha1
+	Fake *FakeCnatV1alpha1
 	ns   string
 }
 

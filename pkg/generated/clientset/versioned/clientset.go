@@ -29,18 +29,18 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	cnatV1alpha1() cnatv1alpha1.cnatV1alpha1Interface
+	CnatV1alpha1() cnatv1alpha1.CnatV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	cnatV1alpha1 *cnatv1alpha1.cnatV1alpha1Client
+	cnatV1alpha1 *cnatv1alpha1.CnatV1alpha1Client
 }
 
-// cnatV1alpha1 retrieves the cnatV1alpha1Client
-func (c *Clientset) cnatV1alpha1() cnatv1alpha1.cnatV1alpha1Interface {
+// CnatV1alpha1 retrieves the CnatV1alpha1Client
+func (c *Clientset) CnatV1alpha1() cnatv1alpha1.CnatV1alpha1Interface {
 	return c.cnatV1alpha1
 }
 

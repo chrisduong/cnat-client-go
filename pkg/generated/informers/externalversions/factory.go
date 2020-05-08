@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	cnat() cnat.Interface
+	Cnat() cnat.Interface
 }
 
-func (f *sharedInformerFactory) cnat() cnat.Interface {
+func (f *sharedInformerFactory) Cnat() cnat.Interface {
 	return cnat.New(f, f.namespace, f.tweakListOptions)
 }

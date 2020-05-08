@@ -54,7 +54,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	switch resource {
 	// Group=cnat.programming-kubernetes.info, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("ats"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.cnat().V1alpha1().Ats().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cnat().V1alpha1().Ats().Informer()}, nil
 
 	}
 
