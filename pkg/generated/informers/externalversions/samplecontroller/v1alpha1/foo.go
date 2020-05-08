@@ -22,10 +22,10 @@ import (
 	"context"
 	time "time"
 
-	samplecontrollerv1alpha1 "github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller/v1alpha1"
+	cnatv1alpha1 "github.com/chrisduong/cnat-client-go/pkg/apis/cnat/v1alpha1"
 	versioned "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/chrisduong/cnat-client-go/pkg/generated/listers/samplecontroller/v1alpha1"
+	v1alpha1 "github.com/chrisduong/cnat-client-go/pkg/generated/listers/cnat/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -62,16 +62,16 @@ func NewFilteredFooInformer(client versioned.Interface, namespace string, resync
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Foos(namespace).List(context.TODO(), options)
+				return client.cnatV1alpha1().Foos(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Foos(namespace).Watch(context.TODO(), options)
+				return client.cnatV1alpha1().Foos(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&samplecontrollerv1alpha1.Foo{},
+		&cnatv1alpha1.Foo{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,7 +82,7 @@ func (f *fooInformer) defaultInformer(client versioned.Interface, resyncPeriod t
 }
 
 func (f *fooInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&samplecontrollerv1alpha1.Foo{}, f.defaultInformer)
+	return f.factory.InformerFor(&cnatv1alpha1.Foo{}, f.defaultInformer)
 }
 
 func (f *fooInformer) Lister() v1alpha1.FooLister {

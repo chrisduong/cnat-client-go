@@ -57,7 +57,7 @@ type ats struct {
 }
 
 // newAts returns a Ats
-func newAts(c *SamplecontrollerV1alpha1Client, namespace string) *ats {
+func newAts(c *cnatV1alpha1Client, namespace string) *ats {
 	return &ats{
 		client: c.RESTClient(),
 		ns:     namespace,

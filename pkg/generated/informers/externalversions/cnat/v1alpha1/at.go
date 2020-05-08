@@ -62,13 +62,13 @@ func NewFilteredAtInformer(client versioned.Interface, namespace string, resyncP
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Ats(namespace).List(context.TODO(), options)
+				return client.cnatV1alpha1().Ats(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Ats(namespace).Watch(context.TODO(), options)
+				return client.cnatV1alpha1().Ats(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&cnatv1alpha1.At{},

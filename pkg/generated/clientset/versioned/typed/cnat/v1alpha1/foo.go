@@ -57,7 +57,7 @@ type foos struct {
 }
 
 // newFoos returns a Foos
-func newFoos(c *SamplecontrollerV1alpha1Client, namespace string) *foos {
+func newFoos(c *cnatV1alpha1Client, namespace string) *foos {
 	return &foos{
 		client: c.RESTClient(),
 		ns:     namespace,

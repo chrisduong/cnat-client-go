@@ -62,13 +62,13 @@ func NewFilteredFooInformer(client versioned.Interface, namespace string, resync
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Foos(namespace).List(context.TODO(), options)
+				return client.cnatV1alpha1().Foos(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Foos(namespace).Watch(context.TODO(), options)
+				return client.cnatV1alpha1().Foos(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&cnatv1alpha1.Foo{},

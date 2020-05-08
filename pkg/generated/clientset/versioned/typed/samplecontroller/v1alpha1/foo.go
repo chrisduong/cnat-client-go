@@ -22,7 +22,7 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller/v1alpha1"
+	v1alpha1 "github.com/chrisduong/cnat-client-go/pkg/apis/cnat/v1alpha1"
 	scheme "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -57,7 +57,7 @@ type foos struct {
 }
 
 // newFoos returns a Foos
-func newFoos(c *SamplecontrollerV1alpha1Client, namespace string) *foos {
+func newFoos(c *cnatV1alpha1Client, namespace string) *foos {
 	return &foos{
 		client: c.RESTClient(),
 		ns:     namespace,

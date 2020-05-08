@@ -16,7 +16,7 @@ go mod vendor
 
 ### Rename
 
-Rename the folder the *pkg/apis/samplecontroller* to *pkg/apis/yourown*
+Rename the folder the *pkg/apis/cnat* to *pkg/apis/yourown*
 
 Rename *module* path to *github.com/chrisduong/cnat-client-go*
 
