@@ -5,6 +5,7 @@ module github.com/chrisduong/cnat-client-go
 go 1.13
 
 require (
+	github.com/programming-kubernetes/cnat/cnat-client-go v0.0.0-20200122054508-27f8ddba657b
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v0.18.2

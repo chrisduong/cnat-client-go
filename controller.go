@@ -40,7 +40,9 @@ import (
 	cnatscheme "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/scheme"
 	informers "github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/cnat/v1alpha1"
 	listers "github.com/chrisduong/cnat-client-go/pkg/generated/listers/cnat/v1alpha1"
+	cnatv1alpha1 "github.com/programming-kubernetes/cnat/cnat-client-go/pkg/apis/cnat/v1alpha1"
 	corev1informer "k8s.io/client-go/informers/core/v1"
+	corev1lister "k8s.io/client-go/listers/core/v1"
 )
 
 const controllerAgentName = "cnat-controller"
@@ -54,6 +56,9 @@ type Controller struct {
 
 	atsLister listers.AtLister
 	atsSynced cache.InformerSynced
+
+	podsLister corev1lister.PodLister
+	podsSynced cache.InformerSynced
 
 	// workqueue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
@@ -88,7 +93,7 @@ func NewController(
 		cnatclientset: cnatclientset,
 		atsLister:     atInformer.Lister(),
 		atsSynced:     atInformer.Informer().HasSynced,
-		podLister:     podInformer.Lister(),
+		podsLister:    podInformer.Lister(),
 		podsSynced:    podInformer.Informer().HasSynced,
 		workqueue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Ats"),
 		recorder:      recorder,
@@ -185,15 +190,18 @@ func (c *Controller) processNextWorkItem() bool {
 			return nil
 		}
 		// Run the syncHandler, passing it the namespace/name string of the
-		// Foo resource to be synced.
-		if err := c.syncHandler(key); err != nil {
+		// At resource to be synced.
+		if when, err := c.syncHandler(key); err != nil {
 			// Put the item back on the workqueue to handle any transient errors.
 			c.workqueue.AddRateLimited(key)
 			return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
+		} else if when != time.Duration(0) {
+			c.workqueue.AddAfter(key, when)
+		} else {
+			// Finally, if no error occurs we Forget this item so it does not
+			// get queued again until another change happens.
+			c.workqueue.Forget(obj)
 		}
-		// Finally, if no error occurs we Forget this item so it does not
-		// get queued again until another change happens.
-		c.workqueue.Forget(obj)
 		klog.Infof("Successfully synced '%s'", key)
 		return nil
 	}(obj)
@@ -207,8 +215,9 @@ func (c *Controller) processNextWorkItem() bool {
 }
 
 // syncHandler compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the Foo resource
+// converge the two. It then updates the Status block of the At resource
 // with the current status of the resource.
+// It returns how long to wait until the schedule is due.
 func (c *Controller) syncHandler(key string) (time.Duration, error) {
 	klog.Infof("=== Reconciling At %s", key)
 
@@ -220,7 +229,7 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 	}
 
 	// Get the At resource with this namespace/name
-	orignal, err := c.atsLister.Ats(namespace).Get(name)
+	original, err := c.atsLister.Ats(namespace).Get(name)
 	if err != nil {
 		// The At resource may no longer exist, in which case we stop
 		// processing.
@@ -229,7 +238,7 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 			return time.Duration(0), nil
 		}
 
-		return time.Duration(0), nil
+		return time.Duration(0), err
 	}
 
 	// Clone because the original object is owned by the lister.
