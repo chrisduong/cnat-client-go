@@ -1,5 +1,5 @@
 {
-	"ImportPath": "k8s.io/sample-controller",
+	"ImportPath": "github.com/chrisduong/cnat-client-go",
 	"GoVersion": "unknown",
 	"GodepVersion": "gen-godeps",
 	"Packages": [

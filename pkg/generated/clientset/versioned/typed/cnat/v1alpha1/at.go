@@ -30,46 +30,46 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// FoosGetter has a method to return a FooInterface.
+// AtsGetter has a method to return a AtInterface.
 // A group's client should implement this interface.
-type FoosGetter interface {
-	Foos(namespace string) FooInterface
+type AtsGetter interface {
+	Ats(namespace string) AtInterface
 }
 
-// FooInterface has methods to work with Foo resources.
-type FooInterface interface {
-	Create(ctx context.Context, foo *v1alpha1.Foo, opts v1.CreateOptions) (*v1alpha1.Foo, error)
-	Update(ctx context.Context, foo *v1alpha1.Foo, opts v1.UpdateOptions) (*v1alpha1.Foo, error)
-	UpdateStatus(ctx context.Context, foo *v1alpha1.Foo, opts v1.UpdateOptions) (*v1alpha1.Foo, error)
+// AtInterface has methods to work with At resources.
+type AtInterface interface {
+	Create(ctx context.Context, at *v1alpha1.At, opts v1.CreateOptions) (*v1alpha1.At, error)
+	Update(ctx context.Context, at *v1alpha1.At, opts v1.UpdateOptions) (*v1alpha1.At, error)
+	UpdateStatus(ctx context.Context, at *v1alpha1.At, opts v1.UpdateOptions) (*v1alpha1.At, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Foo, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.FooList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.At, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.AtList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Foo, err error)
-	FooExpansion
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.At, err error)
+	AtExpansion
 }
 
-// foos implements FooInterface
-type foos struct {
+// ats implements AtInterface
+type ats struct {
 	client rest.Interface
 	ns     string
 }
 
-// newFoos returns a Foos
-func newFoos(c *cnatV1alpha1Client, namespace string) *foos {
-	return &foos{
+// newAts returns a Ats
+func newAts(c *cnatV1alpha1Client, namespace string) *ats {
+	return &ats{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the foo, and returns the corresponding foo object, and an error if there is any.
-func (c *foos) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Foo, err error) {
-	result = &v1alpha1.Foo{}
+// Get takes name of the at, and returns the corresponding at object, and an error if there is any.
+func (c *ats) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.At, err error) {
+	result = &v1alpha1.At{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -77,16 +77,16 @@ func (c *foos) Get(ctx context.Context, name string, options v1.GetOptions) (res
 	return
 }
 
-// List takes label and field selectors, and returns the list of Foos that match those selectors.
-func (c *foos) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.FooList, err error) {
+// List takes label and field selectors, and returns the list of Ats that match those selectors.
+func (c *ats) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AtList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result = &v1alpha1.FooList{}
+	result = &v1alpha1.AtList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -94,8 +94,8 @@ func (c *foos) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested foos.
-func (c *foos) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested ats.
+func (c *ats) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -103,34 +103,34 @@ func (c *foos) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface,
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
 }
 
-// Create takes the representation of a foo and creates it.  Returns the server's representation of the foo, and an error, if there is any.
-func (c *foos) Create(ctx context.Context, foo *v1alpha1.Foo, opts v1.CreateOptions) (result *v1alpha1.Foo, err error) {
-	result = &v1alpha1.Foo{}
+// Create takes the representation of a at and creates it.  Returns the server's representation of the at, and an error, if there is any.
+func (c *ats) Create(ctx context.Context, at *v1alpha1.At, opts v1.CreateOptions) (result *v1alpha1.At, err error) {
+	result = &v1alpha1.At{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(foo).
+		Body(at).
 		Do(ctx).
 		Into(result)
 	return
 }
 
-// Update takes the representation of a foo and updates it. Returns the server's representation of the foo, and an error, if there is any.
-func (c *foos) Update(ctx context.Context, foo *v1alpha1.Foo, opts v1.UpdateOptions) (result *v1alpha1.Foo, err error) {
-	result = &v1alpha1.Foo{}
+// Update takes the representation of a at and updates it. Returns the server's representation of the at, and an error, if there is any.
+func (c *ats) Update(ctx context.Context, at *v1alpha1.At, opts v1.UpdateOptions) (result *v1alpha1.At, err error) {
+	result = &v1alpha1.At{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("foos").
-		Name(foo.Name).
+		Resource("ats").
+		Name(at.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(foo).
+		Body(at).
 		Do(ctx).
 		Into(result)
 	return
@@ -138,25 +138,25 @@ func (c *foos) Update(ctx context.Context, foo *v1alpha1.Foo, opts v1.UpdateOpti
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *foos) UpdateStatus(ctx context.Context, foo *v1alpha1.Foo, opts v1.UpdateOptions) (result *v1alpha1.Foo, err error) {
-	result = &v1alpha1.Foo{}
+func (c *ats) UpdateStatus(ctx context.Context, at *v1alpha1.At, opts v1.UpdateOptions) (result *v1alpha1.At, err error) {
+	result = &v1alpha1.At{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("foos").
-		Name(foo.Name).
+		Resource("ats").
+		Name(at.Name).
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(foo).
+		Body(at).
 		Do(ctx).
 		Into(result)
 	return
 }
 
-// Delete takes name of the foo and deletes it. Returns an error if one occurs.
-func (c *foos) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+// Delete takes name of the at and deletes it. Returns an error if one occurs.
+func (c *ats) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -164,14 +164,14 @@ func (c *foos) Delete(ctx context.Context, name string, opts v1.DeleteOptions) e
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *foos) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *ats) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
 	if listOpts.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -179,12 +179,12 @@ func (c *foos) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, list
 		Error()
 }
 
-// Patch applies the patch and returns the patched foo.
-func (c *foos) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Foo, err error) {
-	result = &v1alpha1.Foo{}
+// Patch applies the patch and returns the patched at.
+func (c *ats) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.At, err error) {
+	result = &v1alpha1.At{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("foos").
+		Resource("ats").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
