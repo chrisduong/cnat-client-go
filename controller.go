@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -27,7 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	appsinformers "k8s.io/client-go/informers/apps/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -36,11 +36,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
 
-	samplev1alpha1 "github.com/chrisduong/cnat-client-go/pkg/apis/cnat/v1alpha1"
 	clientset "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned"
-	samplescheme "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/scheme"
+	cnatscheme "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/scheme"
 	informers "github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/cnat/v1alpha1"
 	listers "github.com/chrisduong/cnat-client-go/pkg/generated/listers/cnat/v1alpha1"
+	corev1informer "k8s.io/client-go/informers/core/v1"
 )
 
 const controllerAgentName = "cnat-controller"
@@ -70,13 +70,13 @@ type Controller struct {
 func NewController(
 	kubeclientset kubernetes.Interface,
 	cnatclientset clientset.Interface,
-	deploymentInformer appsinformers.DeploymentInformer,
-	fooInformer informers.FooInformer) *Controller {
+	atInformer informers.AtInformer,
+	podInformer corev1informer.PodInformer) *Controller {
 
 	// Create event broadcaster
-	// Add sample-controller types to the default Kubernetes Scheme so Events can be
-	// logged for sample-controller types.
-	utilruntime.Must(samplescheme.AddToScheme(scheme.Scheme))
+	// Add cnat-controller types to the default Kubernetes Scheme so Events can be
+	// logged for cnat-controller types.
+	utilruntime.Must(cnatscheme.AddToScheme(scheme.Scheme))
 	klog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
@@ -84,43 +84,30 @@ func NewController(
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
 	controller := &Controller{
-		kubeclientset:     kubeclientset,
-		cnatclientset:     cnatclientset,
-		deploymentsLister: deploymentInformer.Lister(),
-		deploymentsSynced: deploymentInformer.Informer().HasSynced,
-		atsLister:         fooInformer.Lister(),
-		atsSynced:         fooInformer.Informer().HasSynced,
-		workqueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Foos"),
-		recorder:          recorder,
+		kubeclientset: kubeclientset,
+		cnatclientset: cnatclientset,
+		atsLister:     atInformer.Lister(),
+		atsSynced:     atInformer.Informer().HasSynced,
+		podLister:     podInformer.Lister(),
+		podsSynced:    podInformer.Informer().HasSynced,
+		workqueue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Ats"),
+		recorder:      recorder,
 	}
 
 	klog.Info("Setting up event handlers")
 	// Set up an event handler for when Foo resources change
-	fooInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	atInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueFoo,
 		UpdateFunc: func(old, new interface{}) {
 			controller.enqueueFoo(new)
 		},
 	})
-	// Set up an event handler for when Deployment resources change. This
-	// handler will lookup the owner of the given Deployment, and if it is
-	// owned by a Foo resource will enqueue that Foo resource for
-	// processing. This way, we don't need to implement custom logic for
-	// handling Deployment resources. More info on this pattern:
-	// https://github.com/kubernetes/community/blob/8cafef897a22026d42f5e5bb3f104febe7e29830/contributors/devel/controllers.md
-	deploymentInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.handleObject,
+	// Set up an event handler for when Pod resources change
+	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: controller.enqueuePod,
 		UpdateFunc: func(old, new interface{}) {
-			newDepl := new.(*appsv1.Deployment)
-			oldDepl := old.(*appsv1.Deployment)
-			if newDepl.ResourceVersion == oldDepl.ResourceVersion {
-				// Periodic resync will send update events for all known Deployments.
-				// Two different versions of the same Deployment will always have different RVs.
-				return
-			}
-			controller.handleObject(new)
+			controller.enqueuePod(new)
 		},
-		DeleteFunc: controller.handleObject,
 	})
 
 	return controller
@@ -222,82 +209,105 @@ func (c *Controller) processNextWorkItem() bool {
 // syncHandler compares the actual state with the desired, and attempts to
 // converge the two. It then updates the Status block of the Foo resource
 // with the current status of the resource.
-func (c *Controller) syncHandler(key string) error {
+func (c *Controller) syncHandler(key string) (time.Duration, error) {
+	klog.Infof("=== Reconciling At %s", key)
+
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
-		return nil
+		return time.Duration(0), nil
 	}
 
-	// Get the Foo resource with this namespace/name
-	foo, err := c.atsLister.Foos(namespace).Get(name)
+	// Get the At resource with this namespace/name
+	orignal, err := c.atsLister.Ats(namespace).Get(name)
 	if err != nil {
-		// The Foo resource may no longer exist, in which case we stop
+		// The At resource may no longer exist, in which case we stop
 		// processing.
 		if errors.IsNotFound(err) {
-			utilruntime.HandleError(fmt.Errorf("foo '%s' in work queue no longer exists", key))
-			return nil
+			utilruntime.HandleError(fmt.Errorf("at '%s' in work queue no longer exists", key))
+			return time.Duration(0), nil
 		}
 
-		return err
+		return time.Duration(0), nil
 	}
 
-	deploymentName := foo.Spec.DeploymentName
-	if deploymentName == "" {
-		// We choose to absorb the error here as the worker would requeue the
-		// resource otherwise. Instead, the next time the resource is updated
-		// the resource will be queued again.
-		utilruntime.HandleError(fmt.Errorf("%s: deployment name must be specified", key))
-		return nil
+	// Clone because the original object is owned by the lister.
+	instance := original.DeepCopy()
+
+	// If no phase set, default to pending (the initial phase):
+	if instance.Status.Phase == "" {
+		instance.Status.Phase = cnatv1alpha1.PhasePending
 	}
 
-	// Get the deployment with the name specified in Foo.spec
-	deployment, err := c.deploymentsLister.Deployments(foo.Namespace).Get(deploymentName)
-	// If the resource doesn't exist, we'll create it
-	if errors.IsNotFound(err) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(foo.Namespace).Create(context.TODO(), newDeployment(foo), metav1.CreateOptions{})
+	// Now let's make the main case distinction: implementing
+	// the state diagram PENDING -> RUNNING -> DONE
+	switch instance.Status.Phase {
+	case cnatv1alpha1.PhasePending:
+		klog.Infof("instance %s: phase=PENDING", key)
+		// As long as we haven't executed the command yet,  we need to check if it's time already to act:
+		klog.Infof("instance %s: checking schedule %q", key, instance.Spec.Schedule)
+		// Check if it's already time to execute the command with a tolerance of 2 seconds:
+		d, err := timeUntilSchedule(instance.Spec.Schedule)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("schedule parsing failed: %v", err))
+			// Error reading the schedule - requeue the request:
+			return time.Duration(0), err
+		}
+		klog.Infof("instance %s: schedule parsing done: diff=%v", key, d)
+		if d > 0 {
+			// Not yet time to execute the command, wait until the scheduled time
+			return d, nil
+		}
+
+		klog.Infof("instance %s: it's time! Ready to execute: %s", key, instance.Spec.Command)
+		instance.Status.Phase = cnatv1alpha1.PhaseRunning
+	case cnatv1alpha1.PhaseRunning:
+		klog.Infof("instance %s: Phase: RUNNING", key)
+
+		pod := newPodForCR(instance)
+
+		// Set At instance as the owner and controller
+		owner := metav1.NewControllerRef(instance, cnatv1alpha1.SchemeGroupVersion.WithKind("At"))
+		pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *owner)
+
+		// Try to see if the pod already exists and if not
+		// (which we expect) then create a one-shot pod as per spec:
+		found, err := c.kubeClientset.CoreV1().Pods(pod.Namespace).Get(pod.Name, metav1.GetOptions{})
+		if err != nil && errors.IsNotFound(err) {
+			found, err = c.kubeClientset.CoreV1().Pods(pod.Namespace).Create(pod)
+			if err != nil {
+				return time.Duration(0), err
+			}
+			klog.Infof("instance %s: pod launched: name=%s", key, pod.Name)
+		} else if err != nil {
+			// requeue with error
+			return time.Duration(0), err
+		} else if found.Status.Phase == corev1.PodFailed || found.Status.Phase == corev1.PodSucceeded {
+			klog.Infof("instance %s: container terminated: reason=%q message=%q", key, found.Status.Reason, found.Status.Message)
+			instance.Status.Phase = cnatv1alpha1.PhaseDone
+		} else {
+			// don't requeue because it will happen automatically when the pod status changes
+			return time.Duration(0), nil
+		}
+	case cnatv1alpha1.PhaseDone:
+		klog.Infof("instance %s: phase: DONE", key)
+		return time.Duration(0), nil
+	default:
+		klog.Infof("instance %s: NOP", key)
+		return time.Duration(0), nil
 	}
 
-	// If an error occurs during Get/Create, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
-	// temporary network failure, or any other transient reason.
-	if err != nil {
-		return err
+	if !reflect.DeepEqual(original, instance) {
+		// Update the At instance, setting the status to the respective phase:
+		_, err = c.cnatClientset.CnatV1alpha1().Ats(instance.Namespace).UpdateStatus(instance)
+		if err != nil {
+			return time.Duration(0), err
+		}
 	}
 
-	// If the Deployment is not controlled by this Foo resource, we should log
-	// a warning to the event recorder and return error msg.
-	if !metav1.IsControlledBy(deployment, foo) {
-		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
-		c.recorder.Event(foo, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
-	}
-
-	// If this number of the replicas on the Foo resource is specified, and the
-	// number does not equal the current desired replicas on the Deployment, we
-	// should update the Deployment resource.
-	if foo.Spec.Replicas != nil && *foo.Spec.Replicas != *deployment.Spec.Replicas {
-		klog.V(4).Infof("Foo %s replicas: %d, deployment replicas: %d", name, *foo.Spec.Replicas, *deployment.Spec.Replicas)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(foo.Namespace).Update(context.TODO(), newDeployment(foo), metav1.UpdateOptions{})
-	}
-
-	// If an error occurs during Update, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
-	// temporary network failure, or any other transient reason.
-	if err != nil {
-		return err
-	}
-
-	// Finally, we update the status block of the Foo resource to reflect the
-	// current state of the world
-	err = c.updateFooStatus(foo, deployment)
-	if err != nil {
-		return err
-	}
-
-	c.recorder.Event(foo, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
-	return nil
+	// Don't requeue. We should be reconcile because either the pod or the CR changes.
+	return time.Duration(0), nil
 }
 
 func (c *Controller) updateFooStatus(foo *samplev1alpha1.Foo, deployment *appsv1.Deployment) error {
