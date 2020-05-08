@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	samplecontroller "github.com/chrisduong/cnat-go-client/pkg/apis/samplecontroller"
+	samplecontroller "github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller"
 )
 
 // SchemeGroupVersion is group version used to register these objects

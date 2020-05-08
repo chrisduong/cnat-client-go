@@ -447,20 +447,20 @@ k8s.io/kube-openapi/pkg/generators
 k8s.io/kube-openapi/pkg/generators/rules
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/util/sets
-# github.com/chrisduong/cnat-go-client v0.18.2
-github.com/chrisduong/cnat-go-client/pkg/apis/samplecontroller
-github.com/chrisduong/cnat-go-client/pkg/apis/samplecontroller/v1alpha1
-github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned
-github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/fake
-github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/scheme
-github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1
-github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1/fake
-github.com/chrisduong/cnat-go-client/pkg/generated/informers/externalversions
-github.com/chrisduong/cnat-go-client/pkg/generated/informers/externalversions/internalinterfaces
-github.com/chrisduong/cnat-go-client/pkg/generated/informers/externalversions/samplecontroller
-github.com/chrisduong/cnat-go-client/pkg/generated/informers/externalversions/samplecontroller/v1alpha1
-github.com/chrisduong/cnat-go-client/pkg/generated/listers/samplecontroller/v1alpha1
-github.com/chrisduong/cnat-go-client/pkg/signals
+# github.com/chrisduong/cnat-client-go v0.18.2
+github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller
+github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller/v1alpha1
+github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned
+github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/fake
+github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/scheme
+github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1
+github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1/fake
+github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions
+github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/internalinterfaces
+github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/samplecontroller
+github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/samplecontroller/v1alpha1
+github.com/chrisduong/cnat-client-go/pkg/generated/listers/samplecontroller/v1alpha1
+github.com/chrisduong/cnat-client-go/pkg/signals
 # k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89
 k8s.io/utils/buffer
 k8s.io/utils/integer

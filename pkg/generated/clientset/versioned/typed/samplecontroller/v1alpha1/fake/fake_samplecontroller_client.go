@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
+	v1alpha1 "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

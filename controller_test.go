@@ -33,9 +33,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	samplecontroller "github.com/chrisduong/cnat-go-client/pkg/apis/samplecontroller/v1alpha1"
-	"github.com/chrisduong/cnat-go-client/pkg/generated/clientset/versioned/fake"
-	informers "github.com/chrisduong/cnat-go-client/pkg/generated/informers/externalversions"
+	samplecontroller "github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller/v1alpha1"
+	"github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/fake"
+	informers "github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions"
 )
 
 var (

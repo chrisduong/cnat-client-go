@@ -18,4 +18,4 @@ limitations under the License.
 // +groupName=samplecontroller.k8s.io
 
 // Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "github.com/chrisduong/cnat-go-client/pkg/apis/samplecontroller/v1alpha1"
+package v1alpha1 // import "github.com/chrisduong/cnat-client-go/pkg/apis/samplecontroller/v1alpha1"
