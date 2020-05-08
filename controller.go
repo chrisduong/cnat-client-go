@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -386,40 +387,38 @@ func (c *Controller) handleObject(obj interface{}) {
 	}
 }
 
-// newDeployment creates a new Deployment for a Foo resource. It also sets
-// the appropriate OwnerReferences on the resource so handleObject can discover
-// the Foo resource that 'owns' it.
-func newDeployment(foo *samplev1alpha1.Foo) *appsv1.Deployment {
+// newPodForCR returns a busybox pod with the same name/namespace as the cr
+func newPodForCR(cr *cnatv1alpha1.At) *corev1.Pod {
 	labels := map[string]string{
-		"app":        "nginx",
-		"controller": foo.Name,
+		"app": cr.Name,
 	}
-	return &appsv1.Deployment{
+	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      foo.Spec.DeploymentName,
-			Namespace: foo.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(foo, samplev1alpha1.SchemeGroupVersion.WithKind("Foo")),
-			},
+			Name:      cr.Name + "-pod",
+			Namespace: cr.Namespace,
+			Labels:    labels,
 		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: foo.Spec.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "nginx",
-							Image: "nginx:latest",
-						},
-					},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:    "busybox",
+					Image:   "busybox",
+					Command: strings.Split(cr.Spec.Command, " "),
 				},
 			},
+			RestartPolicy: corev1.RestartPolicyOnFailure,
 		},
 	}
+}
+
+// timeUntilSchedule parses the schedule string and returns the time until the schedule.
+// When it is overdue, the duration is negative.
+func timeUntilSchedule(schedule string) (time.Duration, error) {
+	now := time.Now().UTC()
+	layout := "2006-01-02T15:04:05Z"
+	s, err := time.Parse(layout, schedule)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return s.Sub(now), nil
 }
