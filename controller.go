@@ -103,9 +103,9 @@ func NewController(
 	klog.Info("Setting up event handlers")
 	// Set up an event handler for when Foo resources change
 	atInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.enqueueFoo,
+		AddFunc: controller.enqueuePod,
 		UpdateFunc: func(old, new interface{}) {
-			controller.enqueueFoo(new)
+			controller.enqueuePod(new)
 		},
 	})
 	// Set up an event handler for when Pod resources change
@@ -334,10 +334,10 @@ func (c *Controller) updateFooStatus(foo *samplev1alpha1.Foo, deployment *appsv1
 	return err
 }
 
-// enqueueFoo takes a Foo resource and converts it into a namespace/name
+// enqueuePod takes a Foo resource and converts it into a namespace/name
 // string which is then put onto the work queue. This method should *not* be
 // passed resources of any type other than Foo.
-func (c *Controller) enqueueFoo(obj interface{}) {
+func (c *Controller) enqueuePod(obj interface{}) {
 	var key string
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
@@ -382,7 +382,7 @@ func (c *Controller) handleObject(obj interface{}) {
 			return
 		}
 
-		c.enqueueFoo(foo)
+		c.enqueuePod(foo)
 		return
 	}
 }
