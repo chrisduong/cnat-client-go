@@ -347,46 +347,6 @@ func (c *Controller) enqueuePod(obj interface{}) {
 	c.workqueue.Add(key)
 }
 
-// handleObject will take any resource implementing metav1.Object and attempt
-// to find the Foo resource that 'owns' it. It does this by looking at the
-// objects metadata.ownerReferences field for an appropriate OwnerReference.
-// It then enqueues that Foo resource to be processed. If the object does not
-// have an appropriate OwnerReference, it will simply be skipped.
-func (c *Controller) handleObject(obj interface{}) {
-	var object metav1.Object
-	var ok bool
-	if object, ok = obj.(metav1.Object); !ok {
-		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
-		if !ok {
-			utilruntime.HandleError(fmt.Errorf("error decoding object, invalid type"))
-			return
-		}
-		object, ok = tombstone.Obj.(metav1.Object)
-		if !ok {
-			utilruntime.HandleError(fmt.Errorf("error decoding object tombstone, invalid type"))
-			return
-		}
-		klog.V(4).Infof("Recovered deleted object '%s' from tombstone", object.GetName())
-	}
-	klog.V(4).Infof("Processing object: %s", object.GetName())
-	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
-		// If this object is not owned by a Foo, we should not do anything more
-		// with it.
-		if ownerRef.Kind != "Foo" {
-			return
-		}
-
-		foo, err := c.atsLister.Foos(object.GetNamespace()).Get(ownerRef.Name)
-		if err != nil {
-			klog.V(4).Infof("ignoring orphaned object '%s' of foo '%s'", object.GetSelfLink(), ownerRef.Name)
-			return
-		}
-
-		c.enqueuePod(foo)
-		return
-	}
-}
-
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
 func newPodForCR(cr *cnatv1alpha1.At) *corev1.Pod {
 	labels := map[string]string{
