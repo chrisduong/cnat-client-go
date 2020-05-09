@@ -128,7 +128,7 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 	defer c.workqueue.ShutDown()
 
 	// Start the informer factories to begin populating the informer caches
-	klog.Info("Starting Foo controller")
+	klog.Info("Starting cnat client-go controller")
 
 	// Wait for the caches to be synced before starting workers
 	klog.Info("Waiting for informer caches to sync")
@@ -252,7 +252,7 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 
 	// Now let's make the main case distinction: implementing
 	// the state diagram PENDING -> RUNNING -> DONE
-	switch instance.Status.Phase {
+	switch cnatv1alpha1.Status.Phase {
 	case cnatv1alpha1.PhasePending:
 		klog.Infof("instance %s: phase=PENDING", key)
 		// As long as we haven't executed the command yet,  we need to check if it's time already to act:
