@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -282,9 +283,9 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 
 		// Try to see if the pod already exists and if not
 		// (which we expect) then create a one-shot pod as per spec:
-		found, err := c.kubeClientset.CoreV1().Pods(pod.Namespace).Get(pod.Name, metav1.GetOptions{})
+		found, err := c.kubeClientset.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
 		if err != nil && errors.IsNotFound(err) {
-			found, err = c.kubeClientset.CoreV1().Pods(pod.Namespace).Create(pod)
+			found, err = c.kubeClientset.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 			if err != nil {
 				return time.Duration(0), err
 			}
@@ -309,7 +310,7 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 
 	if !reflect.DeepEqual(original, instance) {
 		// Update the At instance, setting the status to the respective phase:
-		_, err = c.cnatClientset.CnatV1alpha1().Ats(instance.Namespace).UpdateStatus(instance)
+		_, err = c.cnatClientset.CnatV1alpha1().Ats(instance.Namespace).UpdateStatus(context.TODO(), instance, metav1.UpdateOptions{})
 		if err != nil {
 			return time.Duration(0), err
 		}
