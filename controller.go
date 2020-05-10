@@ -48,7 +48,7 @@ import (
 
 const controllerAgentName = "cnat-controller"
 
-// Controller is the controller implementation for Foo resources
+// Controller is the controller implementation for At resources
 type Controller struct {
 	// kubeclientset is a standard kubernetes clientset
 	kubeclientset kubernetes.Interface
@@ -131,8 +131,9 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 	klog.Info("Starting cnat client-go controller")
 
 	// Wait for the caches to be synced before starting workers
+	// NOTE: we can wait for multiple caches `atsSynced` and `podsSynced`
 	klog.Info("Waiting for informer caches to sync")
-	if ok := cache.WaitForCacheSync(stopCh, c.deploymentsSynced, c.atsSynced); !ok {
+	if ok := cache.WaitForCacheSync(stopCh, c.atsSynced, c.podsSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 

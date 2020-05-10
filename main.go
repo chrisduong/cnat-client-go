@@ -60,7 +60,8 @@ func main() {
 		klog.Fatalf("Error building example clientset: %s", err.Error())
 	}
 
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
+	// 10 minutes resync, because we don't want to check every 30 seconds
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Minute*10)
 	cnatInformerFactory := informers.NewSharedInformerFactory(cnatClient, time.Minute*10)
 
 	controller := NewController(kubeClient, cnatClient,
