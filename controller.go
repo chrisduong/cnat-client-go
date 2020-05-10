@@ -17,13 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,11 +35,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
 
+	cnatv1alpha1 "github.com/chrisduong/cnat-client-go/pkg/apis/cnat/v1alpha1"
 	clientset "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned"
 	cnatscheme "github.com/chrisduong/cnat-client-go/pkg/generated/clientset/versioned/scheme"
 	informers "github.com/chrisduong/cnat-client-go/pkg/generated/informers/externalversions/cnat/v1alpha1"
 	listers "github.com/chrisduong/cnat-client-go/pkg/generated/listers/cnat/v1alpha1"
-	cnatv1alpha1 "github.com/programming-kubernetes/cnat/cnat-client-go/pkg/apis/cnat/v1alpha1"
 	corev1informer "k8s.io/client-go/informers/core/v1"
 	corev1lister "k8s.io/client-go/listers/core/v1"
 )
@@ -50,10 +48,10 @@ const controllerAgentName = "cnat-controller"
 
 // Controller is the controller implementation for At resources
 type Controller struct {
-	// kubeclientset is a standard kubernetes clientset
-	kubeclientset kubernetes.Interface
-	// cnatclientset is a clientset for our own API group
-	cnatclientset clientset.Interface
+	// kubeClientset is a standard kubernetes clientset
+	kubeClientset kubernetes.Interface
+	// cnatClientset is a clientset for our own API group
+	cnatClientset clientset.Interface
 
 	atsLister listers.AtLister
 	atsSynced cache.InformerSynced
@@ -74,8 +72,8 @@ type Controller struct {
 
 // NewController returns a new sample controller
 func NewController(
-	kubeclientset kubernetes.Interface,
-	cnatclientset clientset.Interface,
+	kubeClientset kubernetes.Interface,
+	cnatClientset clientset.Interface,
 	atInformer informers.AtInformer,
 	podInformer corev1informer.PodInformer) *Controller {
 
@@ -86,12 +84,12 @@ func NewController(
 	klog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
-	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClientset.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
 	controller := &Controller{
-		kubeclientset: kubeclientset,
-		cnatclientset: cnatclientset,
+		kubeClientset: kubeClientset,
+		cnatClientset: cnatClientset,
 		atsLister:     atInformer.Lister(),
 		atsSynced:     atInformer.Informer().HasSynced,
 		podsLister:    podInformer.Lister(),
@@ -253,7 +251,7 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 
 	// Now let's make the main case distinction: implementing
 	// the state diagram PENDING -> RUNNING -> DONE
-	switch cnatv1alpha1.Status.Phase {
+	switch instance.Status.Phase {
 	case cnatv1alpha1.PhasePending:
 		klog.Infof("instance %s: phase=PENDING", key)
 		// As long as we haven't executed the command yet,  we need to check if it's time already to act:
@@ -321,23 +319,9 @@ func (c *Controller) syncHandler(key string) (time.Duration, error) {
 	return time.Duration(0), nil
 }
 
-func (c *Controller) updateFooStatus(foo *samplev1alpha1.Foo, deployment *appsv1.Deployment) error {
-	// NEVER modify objects from the store. It's a read-only, local cache.
-	// You can use DeepCopy() to make a deep copy of original object and modify this copy
-	// Or create a copy manually for better performance
-	fooCopy := foo.DeepCopy()
-	fooCopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
-	// If the CustomResourceSubresources feature gate is not enabled,
-	// we must use Update instead of UpdateStatus to update the Status block of the Foo resource.
-	// UpdateStatus will not allow changes to the Spec of the resource,
-	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := c.cnatclientset.cnatV1alpha1().Foos(foo.Namespace).Update(context.TODO(), fooCopy, metav1.UpdateOptions{})
-	return err
-}
-
-// enqueuePod takes a Foo resource and converts it into a namespace/name
+// enqueuePod takes a At resource and converts it into a namespace/name
 // string which is then put onto the work queue. This method should *not* be
-// passed resources of any type other than Foo.
+// passed resources of any type other than At.
 func (c *Controller) enqueuePod(obj interface{}) {
 	var key string
 	var err error
